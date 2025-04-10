@@ -55,13 +55,13 @@ pub struct UserLocation {
     /// The type of location approximation
     pub r#type: UserLocationType,
     /// Free text input for the city of the user, e.g. `San Francisco`.
-    pub city: String,
+    pub city: Option<String>,
     /// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of the user, e.g. `US`.
-    pub country: String,
+    pub country: Option<String>,
     /// Free text input for the region of the user, e.g. `California`.
-    pub region: String,
+    pub region: Option<String>,
     /// The [IANA timezone](https://timeapi.io/documentation/iana-timezones) of the user, e.g. `America/Los_Angeles`.
-    pub timezone: String,
+    pub timezone: Option<String>,
 }
 
 /// The type of location approximation
