@@ -2,7 +2,7 @@ use macon::Builder;
 use serde::{Deserialize, Serialize};
 
 /// The truncation strategy to use for the model response.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Truncation {
     /// If the context of this response and previous ones exceeds the model's context window size, the model will truncate the response to fit the context window by dropping input items in the middle of the conversation.
@@ -17,14 +17,14 @@ pub enum Truncation {
 /// Learn more:
 /// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
 /// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
-#[derive(Debug, Clone, Builder, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Builder, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TextConfig {
     /// An object specifying the format that the model must output.
     pub format: TextFormat,
 }
 
 /// An object specifying the format that the model must output.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum TextFormat {
     /// Used to generate text responses.
@@ -51,7 +51,7 @@ pub enum TextFormat {
 
 /// Configuration options for [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 /// Only available for o-series models.
-#[derive(Debug, Clone, Default, Builder, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Builder, Serialize, Deserialize)]
 pub struct ReasoningConfig {
     /// Constrains effort on reasoning for [reasoning models](https://platform.openai.com/docs/guides/reasoning). Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
     pub effort: Option<ReasoningEffort>,
@@ -62,24 +62,27 @@ pub struct ReasoningConfig {
 /// Constrains effort on reasoning for [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 ///
 /// Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ReasoningEffort {
     Low,
     High,
+    #[default]
     Medium,
 }
 
 /// A summary of the reasoning performed by the model. This can be useful for debugging and understanding the model's reasoning process.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SummaryConfig {
+    #[default]
+    Auto,
     Concise,
     Detailed,
 }
 
 /// The latency tier to use for processing the request.
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ServiceTier {
     #[default]
