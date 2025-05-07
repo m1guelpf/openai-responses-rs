@@ -149,7 +149,7 @@ pub struct APIInputMessage {
     /// The role of the message input.
     pub role: Role,
     /// Text, image, or audio input to the model, used to generate a response. Can also contain previous assistant responses.
-    pub content: ContentItem,
+    pub content: ContentInput,
     /// The status of the message. Populated when the message is returned via API.
     pub status: Option<MessageStatus>,
 }
