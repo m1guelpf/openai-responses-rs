@@ -118,7 +118,10 @@ impl Client {
     /// Have the model call your own [custom code](https://platform.openai.com/docs/guides/function-calling) or use built-in [tools](https://platform.openai.com/docs/guides/tools) like [web search](https://platform.openai.com/docs/guides/tools-web-search) or [file search](https://platform.openai.com/docs/guides/tools-file-search) to use your own data as input for the model's response.
     ///
     /// To receive the response as a regular HTTP response, use the `create` function.
-    pub fn stream(&self, mut request: Request) -> impl Stream<Item = Result<Event, StreamError>> {
+    pub fn stream(
+        &self,
+        mut request: Request,
+    ) -> impl Stream<Item = Result<Event, StreamError>> + Send + 'static + use<'_> {
         // Use the `create` function to receive a regular HTTP response.
         request.stream = Some(true);
 
