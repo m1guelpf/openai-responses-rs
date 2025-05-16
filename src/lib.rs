@@ -24,6 +24,7 @@ pub mod types;
 #[derive(Debug, Clone)]
 pub struct Client {
     client: reqwest::Client,
+    base_url: String,
 }
 
 /// Errors that can occur when creating a new Client.
@@ -66,7 +67,17 @@ impl Client {
             )]))
             .build()?;
 
-        Ok(Self { client })
+        Ok(Self {
+            client,
+            base_url: "https://api.openai.com/v1".to_owned(),
+        })
+    }
+
+    /// Set the base URL for the OpenAI API.
+    #[must_use]
+    pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.base_url = base_url.into();
+        self
     }
 
     /// Creates a new Client from the `OPENAI_API_KEY` environment variable.
@@ -99,7 +110,7 @@ impl Client {
 
         let mut response = self
             .client
-            .post("https://api.openai.com/v1/responses")
+            .post(format!("{}/responses", self.base_url))
             .json(&request)
             .send()
             .await?;
@@ -127,7 +138,7 @@ impl Client {
 
         let mut event_source = self
             .client
-            .post("https://api.openai.com/v1/responses")
+            .post(format!("{}/responses", self.base_url))
             .json(&request)
             .eventsource()
             .unwrap_or_else(|_| unreachable!("Body is never a stream"));
@@ -171,7 +182,7 @@ impl Client {
     ) -> Result<Result<Response, Error>, reqwest::Error> {
         let mut response = self
             .client
-            .get(format!("https://api.openai.com/v1/responses/{response_id}"))
+            .get(format!("{}/responses/{response_id}", self.base_url))
             .query(&json!({ "include": include }))
             .send()
             .await?;
@@ -190,7 +201,7 @@ impl Client {
     /// Errors if the request fails to send or has a non-200 status code.
     pub async fn delete(&self, response_id: &str) -> Result<(), reqwest::Error> {
         self.client
-            .delete(format!("https://api.openai.com/v1/responses/{response_id}"))
+            .delete(format!("{}/responses/{response_id}", self.base_url))
             .send()
             .await?
             .error_for_status()?;
@@ -205,9 +216,7 @@ impl Client {
     /// Errors if the request fails to send or has a non-200 status code.
     pub async fn list_inputs(&self, response_id: &str) -> Result<InputItemList, reqwest::Error> {
         self.client
-            .get(format!(
-                "https://api.openai.com/v1/responses/{response_id}/inputs"
-            ))
+            .get(format!("{}/responses/{response_id}/inputs", self.base_url))
             .send()
             .await?
             .error_for_status()?
