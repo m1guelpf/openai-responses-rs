@@ -69,7 +69,7 @@ impl Client {
 
         Ok(Self {
             client,
-            base_url: "https://api.openai.com/v1".to_owned(),
+            base_url: "https://api.openai.com".to_owned(),
         })
     }
 
@@ -110,7 +110,7 @@ impl Client {
 
         let mut response = self
             .client
-            .post(format!("{}/responses", self.base_url))
+            .post(format!("{}/v1/responses", self.base_url))
             .json(&request)
             .send()
             .await?;
@@ -138,7 +138,7 @@ impl Client {
 
         let mut event_source = self
             .client
-            .post(format!("{}/responses", self.base_url))
+            .post(format!("{}/v1/responses", self.base_url))
             .json(&request)
             .eventsource()
             .unwrap_or_else(|_| unreachable!("Body is never a stream"));
@@ -182,7 +182,7 @@ impl Client {
     ) -> Result<Result<Response, Error>, reqwest::Error> {
         let mut response = self
             .client
-            .get(format!("{}/responses/{response_id}", self.base_url))
+            .get(format!("{}/v1/responses/{response_id}", self.base_url))
             .query(&json!({ "include": include }))
             .send()
             .await?;
@@ -201,7 +201,7 @@ impl Client {
     /// Errors if the request fails to send or has a non-200 status code.
     pub async fn delete(&self, response_id: &str) -> Result<(), reqwest::Error> {
         self.client
-            .delete(format!("{}/responses/{response_id}", self.base_url))
+            .delete(format!("{}/v1/responses/{response_id}", self.base_url))
             .send()
             .await?
             .error_for_status()?;
@@ -216,7 +216,10 @@ impl Client {
     /// Errors if the request fails to send or has a non-200 status code.
     pub async fn list_inputs(&self, response_id: &str) -> Result<InputItemList, reqwest::Error> {
         self.client
-            .get(format!("{}/responses/{response_id}/inputs", self.base_url))
+            .get(format!(
+                "{}/v1/responses/{response_id}/inputs",
+                self.base_url
+            ))
             .send()
             .await?
             .error_for_status()?
