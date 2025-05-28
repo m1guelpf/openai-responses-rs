@@ -151,6 +151,7 @@ pub struct APIInputMessage {
     /// Text, image, or audio input to the model, used to generate a response. Can also contain previous assistant responses.
     pub content: ContentInput,
     /// The status of the message. Populated when the message is returned via API.
+    #[serde(skip_serializing)]
     pub status: Option<MessageStatus>,
 }
 
@@ -206,4 +207,11 @@ pub enum Include {
     /// Include image urls from the computer call output.
     #[serde(rename = "computer_call_output.output.image_url")]
     ComputerCallImageURLs,
+    /// Includes an encrypted version of reasoning tokens in reasoning item
+    /// outputs. This enables reasoning items to be used in multi-turn
+    /// conversations when using the Responses API statelessly (like when the
+    /// store parameter is set to false, or when an organization is enrolled in
+    /// the zero data retention program)
+    #[serde(rename = "reasoning.encrypted_content")]
+    ReasoningEncryptedContent,
 }

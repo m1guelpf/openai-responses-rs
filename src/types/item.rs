@@ -97,6 +97,17 @@ pub enum OutputContent {
     },
 }
 
+/// The content of the summary message.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum SummaryContent {
+    #[serde(rename = "summary_text")]
+    Text {
+        /// The text of the summary part.
+        text: String,
+    },
+}
+
 /// An annotation of the text output.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -394,7 +405,11 @@ pub struct Reasoning {
     pub id: String,
     /// Reasoning text contents.
     pub summary: Vec<ReasoningSummary>,
+    /// The encrypted content of the reasoning item - populated when a response
+    /// is generated with reasoning.encrypted_content in the include parameter.
+    pub encrypted_content: Option<String>,
     /// The status of the item.
+    #[serde(skip_serializing)]
     pub status: Option<ReasoningStatus>,
 }
 

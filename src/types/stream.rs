@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Annotation, OutputContent, OutputItem, Response};
+use super::{Annotation, OutputContent, OutputItem, Response, SummaryContent};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -111,6 +111,54 @@ pub enum Event {
         /// The index of the output item that the text content is finalized.
         output_index: u64,
         /// The text content that is finalized.
+        text: String,
+    },
+    /// Emitted when a new reasoning summary part is added.
+    #[serde(rename = "response.reasoning_summary_part.added")]
+    ReasoningSummaryPartAdded {
+        /// The ID of the item this summary part is associated with.
+        item_id: String,
+        /// The index of the output item this summary part is associated with.
+        output_index: u64,
+        /// The index of the summary part within the reasoning summary.
+        summary_index: u64,
+        /// The summary part that was added.
+        part: SummaryContent,
+    },
+    /// Emitted when a reasoning summary part is completed.
+    #[serde(rename = "response.reasoning_summary_part.done")]
+    ReasoningSummaryPartDone {
+        /// The ID of the item this summary part is associated with.
+        item_id: String,
+        /// The index of the output item this summary part is associated with.
+        output_index: u64,
+        /// The index of the summary part within the reasoning summary.
+        summary_index: u64,
+        /// The summary part that was added.
+        part: SummaryContent,
+    },
+    /// Emitted when there is an additional text delta.
+    #[serde(rename = "response.reasoning_summary_text.delta")]
+    ReasoningSummaryTextDelta {
+        /// The text delta that was added to the summary.
+        delta: String,
+        /// The ID of the item this summary text delta is associated with.
+        item_id: String,
+        /// The index of the output item this summary text delta is associated with.
+        output_index: u64,
+        /// The index of the summary part within the reasoning summary.
+        summary_index: u64,
+    },
+    /// Emitted when text content is finalized.
+    #[serde(rename = "response.reasoning_summary_text.done")]
+    ReasoningSummaryTextDone {
+        /// The ID of the item this summary text is associated with.
+        item_id: String,
+        /// The index of the output item this summary text is associated with.
+        output_index: u64,
+        /// The index of the summary part within the reasoning summary.
+        summary_index: u64,
+        /// The full text of the completed reasoning summary.
         text: String,
     },
     /// Emitted when there is a partial refusal text.
