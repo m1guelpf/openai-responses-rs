@@ -47,6 +47,36 @@ pub enum Tool {
         /// Approximate location parameters for the search.
         user_location: Option<UserLocation>,
     },
+    /// A tool that allows the model to generate, edit, or in-paint an image.
+    ImageGeneration {
+        /// Background type for the generated image.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        background: Option<BackgroundType>,
+        /// Optional mask for in-painting.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        input_image_mask: Option<InputImageMask>,
+        /// The image generation model to use.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        model: Option<String>,
+        /// Moderation level for the generated image.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        moderation: Option<ModerationLevel>,
+        /// Compression level for the output image.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        output_compression: Option<u8>,
+        /// The output format of the generated image.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        output_format: Option<OutputFormat>,
+        /// Number of partial images to generate in streaming mode.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        partial_images: Option<u8>,
+        /// The quality of the generated image.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        quality: Option<ImageQuality>,
+        /// The size of the generated image.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        size: Option<ImageSize>,
+    },
 }
 
 /// Approximate location parameters for the search.
@@ -80,6 +110,70 @@ pub enum SearchContextSize {
     High,
     #[default]
     Medium,
+}
+
+/// Background type for the generated image.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum BackgroundType {
+    Transparent,
+    Opaque,
+    #[default]
+    Auto,
+}
+
+/// Optional mask object for in-painting.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct InputImageMask {
+    /// Optional URL pointing to the mask image.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image_url: Option<String>,
+    /// Optional file identifier referencing an uploaded mask image.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_id: Option<String>,
+}
+
+/// The output image format.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum OutputFormat {
+    #[default]
+    Png,
+    Webp,
+    Jpeg,
+}
+
+/// The desired quality for the generated image.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ImageQuality {
+    Low,
+    Medium,
+    High,
+    #[default]
+    Auto,
+}
+
+/// Moderation level for generated images.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ModerationLevel {
+    #[default]
+    Auto,
+    Low,
+}
+
+/// The size of the generated image.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub enum ImageSize {
+    #[serde(rename = "1024x1024")]
+    _1024x1024,
+    #[serde(rename = "1024x1536")]
+    _1024x1536,
+    #[serde(rename = "1536x1024")]
+    _1536x1024,
+    #[default]
+    Auto,
 }
 
 /// The type of computer environment to control.
@@ -184,6 +278,8 @@ pub enum ToolChoice {
     WebSearchPreview,
     /// Create agentic workflows that enable a model to control a computer interface.
     ComputerUsePreview,
+    /// Generate, edit, or in-paint an image.
+    ImageGeneration,
     /// Enable the model to call custom code that you define, giving it access to additional data and capabilities.
     Function(String),
 }
@@ -235,6 +331,7 @@ impl<'de> Deserialize<'de> for ToolChoice {
                     "file_search" => Ok(ToolChoice::FileSearch),
                     "web_search_preview" => Ok(ToolChoice::WebSearchPreview),
                     "computer_use_preview" => Ok(ToolChoice::ComputerUsePreview),
+                    "image_generation" => Ok(ToolChoice::ImageGeneration),
                     "function" => {
                         let Some(name) = record.get("name") else {
                             return Err(serde::de::Error::missing_field("name"));
@@ -247,6 +344,7 @@ impl<'de> Deserialize<'de> for ToolChoice {
                             "file_search",
                             "web_search_preview",
                             "computer_use_preview",
+                            "image_generation",
                             "function",
                         ],
                     )),
@@ -280,6 +378,11 @@ impl Serialize for ToolChoice {
             Self::ComputerUsePreview => {
                 let mut fn_struct = serializer.serialize_struct("Function", 1)?;
                 fn_struct.serialize_field("type", "computer_use_preview")?;
+                fn_struct.end()
+            }
+            Self::ImageGeneration => {
+                let mut fn_struct = serializer.serialize_struct("Function", 1)?;
+                fn_struct.serialize_field("type", "image_generation")?;
                 fn_struct.end()
             }
             Self::Function(name) => {

@@ -56,6 +56,7 @@ pub struct ReasoningConfig {
     /// Constrains effort on reasoning for [reasoning models](https://platform.openai.com/docs/guides/reasoning). Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
     pub effort: Option<ReasoningEffort>,
     /// A summary of the reasoning performed by the model. This can be useful for debugging and understanding the model's reasoning process.
+    #[serde(rename = "summary")]
     pub generate_summary: Option<SummaryConfig>,
 }
 

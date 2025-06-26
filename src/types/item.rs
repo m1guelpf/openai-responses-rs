@@ -19,6 +19,9 @@ pub enum OutputItem {
     /// A tool call to a computer use tool. See the [computer use guide](https://platform.openai.com/docs/guides/tools-computer-use) for more information.
     #[serde(rename = "computer_call")]
     ComputerToolCall(ComputerToolCall),
+    /// A tool call to generate an image. See the [image generation guide](https://platform.openai.com/docs/guides/image-generation) for more information.
+    #[serde(rename = "image_generation_call")]
+    ImageGeneration(ImageGenerationCall),
     /// A description of the chain of thought used by a reasoning model while generating a response.
     Reasoning(Reasoning),
 }
@@ -55,6 +58,9 @@ pub enum InputItem {
     /// See the [web search guide](https://platform.openai.com/docs/guides/tools-web-search) for more information.
     #[serde(rename = "web_search_call")]
     WebSearchResults(WebSearchCall),
+    /// A tool call to generate an image. See the [image generation guide](https://platform.openai.com/docs/guides/image-generation) for more information.
+    #[serde(rename = "image_generation_call")]
+    ImageGeneration(ImageGenerationCall),
     /// A tool call to run a function.
     ///
     /// See the [function calling guide](https://platform.openai.com/docs/guides/function-calling) for more information.
@@ -385,6 +391,30 @@ pub enum ComputerCallOutput {
         /// The URL of the screenshot image.
         image_url: Option<String>,
     },
+}
+
+/// A tool call to generate an image.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub struct ImageGenerationCall {
+    /// The unique ID of the image generation tool call.
+    pub id: String,
+    /// The generated image encoded in base64.
+    pub result: Option<String>,
+    /// The status of the image generation tool call.
+    pub status: ImageGenerationStatus,
+}
+
+/// The status of the image generation tool call.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ImageGenerationStatus {
+    Completed,
+    Failed,
+    InProgress,
+    Cancelled,
+    Queued,
+    Incomplete,
 }
 
 /// A description of the chain of thought used by a reasoning model while generating a response.
