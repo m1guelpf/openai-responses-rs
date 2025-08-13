@@ -395,7 +395,7 @@ pub struct Reasoning {
     /// Reasoning text contents.
     pub summary: Vec<ReasoningSummary>,
     /// The status of the item.
-    pub status: ReasoningStatus,
+    pub status: Option<ReasoningStatus>,
 }
 
 /// Reasoning text contents.
