@@ -1,6 +1,19 @@
 use serde::{Deserialize, Serialize, de::Visitor, ser::SerializeStruct};
 use std::collections::HashMap;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct Function {
+    /// The name of the function to call.
+    pub name: String,
+    /// A JSON schema object describing the parameters of the function.
+    pub parameters: serde_json::Value,
+    /// Whether to enforce strict parameter validation.
+    pub strict: bool,
+    /// A description of the function. Used by the model to determine whether or not to call the function.
+    pub description: Option<String>,
+}
+
 /// A tool the model may call while generating a response.
 ///
 /// The two categories of tools you can provide the model are:
@@ -10,16 +23,7 @@ use std::collections::HashMap;
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Tool {
     /// Defines a function in your own code the model can choose to call. Learn more about [function calling](https://platform.openai.com/docs/guides/function-calling).
-    Function {
-        /// The name of the function to call.
-        name: String,
-        /// A JSON schema object describing the parameters of the function.
-        parameters: serde_json::Value,
-        /// Whether to enforce strict parameter validation.
-        strict: bool,
-        /// A description of the function. Used by the model to determine whether or not to call the function.
-        description: Option<String>,
-    },
+    Function(Function),
     /// A tool that searches for relevant content from uploaded files. Learn more about the [file search tool](https://platform.openai.com/docs/guides/tools-file-search).
     FileSearch {
         /// The IDs of the vector stores to search.
@@ -47,6 +51,8 @@ pub enum Tool {
         /// Approximate location parameters for the search.
         user_location: Option<UserLocation>,
     },
+    #[serde(rename = "image_generation")]
+    ImageGeneration,
 }
 
 /// Approximate location parameters for the search.
