@@ -66,9 +66,10 @@ pub struct ReasoningConfig {
 #[serde(rename_all = "lowercase")]
 pub enum ReasoningEffort {
     Low,
-    High,
     #[default]
     Medium,
+    High,
+    XHigh,
 }
 
 /// A summary of the reasoning performed by the model. This can be useful for debugging and understanding the model's reasoning process.
