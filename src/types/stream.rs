@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::types::Error;
+
 use super::{Annotation, OutputContent, OutputItem, Response, SummaryContent};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -255,12 +257,5 @@ pub enum Event {
     },
     /// Emitted when an error occurs.
     #[serde(rename = "error")]
-    Error {
-        /// The error code.
-        code: Option<String>,
-        /// The error message.
-        message: String,
-        /// The error parameter.
-        param: Option<String>,
-    },
+    Error { error: Error },
 }
