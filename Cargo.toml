@@ -37,6 +37,7 @@ native-tls-vendored = ["reqwest/native-tls-vendored"]
 
 [dev-dependencies]
 tokio = { version = "1.44.1", features = ["macros", "rt", "rt-multi-thread"] }
+wiremock = "0.6.0"
 
 [package.metadata.docs.rs]
 all-features = true

@@ -4,7 +4,7 @@
 
 use reqwest::{
     Client as Http, StatusCode,
-    header::{self, HeaderMap, HeaderValue},
+    header::{self, HeaderMap, HeaderValue, HeaderName},
 };
 use serde_json::json;
 use std::env;
@@ -52,7 +52,118 @@ pub enum StreamError {
     Parsing(#[from] serde_json::Error),
 }
 
+/// Builder for constructing a [`Client`] with optional OpenAI specific headers.
+///
+/// The builder lets you supply the mandatory API key plus the optional
+/// `OpenAI-Organization` and `OpenAI-Project` headers in a single fluent
+/// chain. If you only need to provide the API key you may continue to use
+/// [`Client::new`] or [`Client::from_env`]; the builder is the most flexible
+/// entry-point.
+///
+/// # Examples
+/// ```rust
+/// use openai_responses::Client;
+///
+/// let client = Client::builder()
+///     .api_key("sk-my-api-key")
+///     .organization("org_123")
+///     .project("my_project")
+///     .build()
+///     .unwrap();
+/// ```
+#[derive(Debug, Default)]
+pub struct ClientBuilder {
+    api_key: Option<String>,
+    organization: Option<String>,
+    project: Option<String>,
+}
+
+impl ClientBuilder {
+    /// Creates a new [`ClientBuilder`]. This is usually accessed through [`Client::builder`].
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Sets the OpenAI API key.
+    #[must_use]
+    pub fn api_key(mut self, api_key: impl Into<String>) -> Self {
+        self.api_key = Some(api_key.into());
+        self
+    }
+
+    /// Sets the OpenAI organization header (`OpenAI-Organization`).
+    #[must_use]
+    pub fn organization(mut self, organization: impl Into<String>) -> Self {
+        self.organization = Some(organization.into());
+        self
+    }
+
+    /// Sets the OpenAI project header (`OpenAI-Project`).
+    #[must_use]
+    pub fn project(mut self, project: impl Into<String>) -> Self {
+        self.project = Some(project.into());
+        self
+    }
+
+    /// Finalises the builder, returning a [`Client`].
+    ///
+    /// # Errors
+    ///
+    /// - `CreateError::ApiKeyNotFound` if no API key was provided.
+    /// - `CreateError::InvalidApiKey` if any header value contains invalid characters.
+    /// - `CreateError::CouldNotCreateClient` if the underlying HTTP client could not be created.
+    pub fn build(self) -> Result<Client, CreateError> {
+        let api_key = self.api_key.ok_or(CreateError::ApiKeyNotFound)?;
+
+        // Build the default headers
+        let mut headers = HeaderMap::from_iter([(
+            header::AUTHORIZATION,
+            HeaderValue::from_str(&format!("Bearer {api_key}"))
+                .map_err(|_| CreateError::InvalidApiKey)?,
+        )]);
+
+        if let Some(org) = self.organization {
+            headers.insert(
+                HeaderName::from_static("openai-organization"),
+                HeaderValue::from_str(&org).map_err(|_| CreateError::InvalidApiKey)?,
+            );
+        }
+
+        if let Some(project) = self.project {
+            headers.insert(
+                HeaderName::from_static("openai-project"),
+                HeaderValue::from_str(&project).map_err(|_| CreateError::InvalidApiKey)?,
+            );
+        }
+
+        let client = Http::builder().default_headers(headers).build()?;
+
+        Ok(Client { client })
+    }
+}
+
 impl Client {
+    /// Creates a [`ClientBuilder`] for constructing a [`Client`].
+    ///
+    /// This is the preferred way to initialise a client when you need to set
+    /// optional OpenAI headers (organisation / project). If you only require
+    /// an API key you can still call [`Client::new`] or [`Client::from_env`].
+    ///
+    /// ```rust
+    /// use openai_responses::Client;
+    ///
+    /// let client = Client::builder()
+    ///     .api_key("sk-...")
+    ///     .organization("org_123")
+    ///     .build()
+    ///     .unwrap();
+    /// ```
+    #[must_use]
+    pub fn builder() -> ClientBuilder {
+        ClientBuilder::new()
+    }
+
     /// Creates a new Client with the given API key.
     ///
     /// # Errors
@@ -225,5 +336,62 @@ impl Client {
             .error_for_status()?
             .json()
             .await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn builder_without_api_key_fails() {
+        let err = Client::builder().build().unwrap_err();
+        assert!(matches!(err, CreateError::ApiKeyNotFound));
+    }
+
+    #[test]
+    fn builder_rejects_invalid_header_values() {
+        let result = Client::builder()
+            .api_key("sk-test")
+            .organization("org\nnewline")
+            .build();
+        assert!(matches!(result.unwrap_err(), CreateError::InvalidApiKey));
+    }
+
+    #[tokio::test]
+    async fn builder_sends_all_headers_over_wire() {
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+        use wiremock::matchers::{header, method, path};
+
+        // Start an ephemeral server.
+        let server = MockServer::start().await;
+
+        // Register expectation: we should receive all headers.
+        Mock::given(method("GET"))
+            .and(path("/"))
+            .and(header("authorization", "Bearer sk-test"))
+            .and(header("openai-organization", "my-org"))
+            .and(header("openai-project", "my-proj"))
+            .respond_with(ResponseTemplate::new(200))
+            .mount(&server)
+            .await;
+
+        // Build our client with all optional headers.
+        let client = Client::builder()
+            .api_key("sk-test")
+            .organization("my-org")
+            .project("my-proj")
+            .build()
+            .unwrap();
+
+        // Make a simple GET request to the mock server.
+        let resp = client
+            .client
+            .get(server.uri())
+            .send()
+            .await
+            .unwrap();
+
+        assert_eq!(resp.status(), 200);
     }
 }

@@ -42,6 +42,26 @@ while let Some(event) = stream.next().await {
 }
 ```
 
+---
+
+## Custom headers (Organization & Project)
+
+If you use an OpenAI organization or want to scope usage to a specific project you can instruct the SDK to send `OpenAI-Organization` and `OpenAI-Project` headers:
+
+```rust ignore
+use openai_responses::Client;
+
+let client = Client::builder()
+    .api_key("sk-my-api-key")
+    .organization("org_123")
+    .project("my_awesome_project")
+    .build()?;
+
+// All requests sent with `client` now include the extra headers.
+```
+
+---
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
